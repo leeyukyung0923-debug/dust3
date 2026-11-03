@@ -1,0 +1,11 @@
+{
+  "name": "dust-dashboard",
+  "version": "1.0.0",
+  "description": "실시간 대기오염 대시보드 웹앱",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  }
+}
+

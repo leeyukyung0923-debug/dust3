@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<!-- 한국어 문서 선언 -->
+<html lang="ko">
+<head>
+  <!-- 문자 인코딩 설정 (UTF-8) -->
+  <meta charset="UTF-8">
+  <!-- 모바일 및 다양한 기기 해상도에 최적화된 반응형 뷰포트 설정 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- 브라우저 상단 탭에 노출될 타이틀 -->
+  <title>실시간 공기 신호등 대시보드</title>
+  <!-- 고품질 한글 웹폰트 Pretendard CDN 연결 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+  <!-- 공기 신호등 전용 스타일시트 연결 -->
+  <link rel="stylesheet" href="style.css">
+  <!-- 데이터 시각화를 위한 Chart.js 공식 CDN 불러오기 -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <!-- 전체 화면 레이아웃을 감싸는 컨테이너 -->
+  <div class="container">
+    
+    <!-- 상단 헤더: 앱 타이틀 및 시도 선택 드롭다운 -->
+    <header class="header">
+      <!-- 서비스 메인 로고 및 타이틀 -->
+      <h1 class="title">🚦 실시간 공기 신호등</h1>
+      <!-- 지역 선택을 위한 드롭다운 그룹 -->
+      <div class="select-group">
+        <!-- 스크린리더 및 접근성 라벨 -->
+        <label for="sidoSelect" class="select-label">지역 선택</label>
+        <!-- 17개 시도 및 전국 선택 셀렉트 박스 -->
+        <select id="sidoSelect" class="sido-select">
+          <option value="전국">전국</option>
+          <option value="서울" selected>서울</option>
+          <option value="부산">부산</option>
+          <option value="대구">대구</option>
+          <option value="인천">인천</option>
+          <option value="광주">광주</option>
+          <option value="대전">대전</option>
+          <option value="울산">울산</option>
+          <option value="세종">세종</option>
+          <option value="경기">경기</option>
+          <option value="강원">강원</option>
+          <option value="충북">충북</option>
+          <option value="충남">충남</option>
+          <option value="전북">전북</option>
+          <option value="전남">전남</option>
+          <option value="경북">경북</option>
+          <option value="경남">경남</option>
+          <option value="제주">제주</option>
+        </select>
+      </div>
+    </header>
+
+    <!-- [핵심] 상단 대표 공기 신호등 대형 대시보드 카드 -->
+    <section id="trafficLightCard" class="traffic-card grade-loading">
+      <!-- 지역 안내 서브헤더 -->
+      <p class="traffic-region-label"><span id="regionNameDisplay">서울</span> 대기질 현황</p>
+      
+      <!-- 신호등 핵심 정보 영역: 이모지 + 상태 텍스트 + 평균 수치 -->
+      <div class="traffic-main">
+        <!-- 등급 이모지 (🔵좋음, 🟢보통, 🟠나쁨, 🔴매우나쁨) -->
+        <span id="trafficEmoji" class="traffic-emoji">⏳</span>
+        <!-- 등급 텍스트 (좋음 / 보통 / 나쁨 / 매우나쁨) -->
+        <span id="trafficGradeText" class="traffic-grade">불러오는 중...</span>
+        <!-- 평균 수치 박스 -->
+        <div class="traffic-value-box">
+          <!-- 대형 평균 수치 숫자 -->
+          <span id="averageValue" class="traffic-value">-</span>
+          <!-- 미세먼지 단위 -->
+          <span class="traffic-unit">㎍/㎥</span>
+        </div>
+      </div>
+
+      <!-- 한 줄 권고 안내 문구 (나쁨 이상이면 '외출 시 마스크를 챙기세요') -->
+      <p id="trafficNotice" class="traffic-notice">실시간 대기오염 정보를 불러오는 중입니다...</p>
+
+      <!-- 한국어 기준 시각 표시 ('2026년 10월 28일 16시 기준') -->
+      <p id="trafficTime" class="traffic-time"></p>
+    </section>
+
+    <!-- 미세먼지 수치 상위 10개 측정소 가로 막대그래프 섹션 -->
+    <section id="chartSection" class="chart-section">
+      <!-- 차트 섹션 제목 -->
+      <div class="chart-header">
+        <h2 class="chart-title">📊 미세먼지 수치 상위 10개 측정소</h2>
+        <span class="chart-subtitle">단위: ㎍/㎥ (수치 높은 순 정렬)</span>
+      </div>
+      <!-- Chart.js 캔버스를 담는 반응형 래퍼 -->
+      <div class="chart-wrapper">
+        <canvas id="dustChart"></canvas>
+      </div>
+    </section>
+
+    <!-- 측정소 카드들이 동적으로 표시될 그리드 컨테이너 -->
+    <main id="stationGrid" class="station-grid">
+      <!-- 자바스크립트를 통해 각 측정소별 카드가 은은한 등급색으로 렌더링됩니다 -->
+    </main>
+
+    <!-- [조건] 데이터 출처 및 공공데이터 정보 안내 푸터 영역 -->
+    <footer class="dashboard-footer">
+      <!-- 데이터 출처 아이콘 및 제목 -->
+      <p class="source-title">📌 데이터 출처 안내</p>
+      <!-- 상세 출처 설명 문구 -->
+      <p class="source-desc">
+        본 대시보드의 실시간 대기오염 측정 정보는 
+        <a href="https://www.data.go.kr" target="_blank" rel="noopener noreferrer" class="source-link">공공데이터포털</a> 및 
+        <a href="https://www.airkorea.or.kr" target="_blank" rel="noopener noreferrer" class="source-link">환경부 한국환경공단(에어코리아)</a>에서 
+        제공하는 공공데이터 오픈API를 활용하여 제작되었습니다.
+      </p>
+      <!-- 저작권 및 안내 보조 문구 -->
+      <p class="source-note">실시간 관측값은 현지 측정소의 사정에 따라 변동되거나 지연될 수 있습니다.</p>
+    </footer>
+
+  </div>
+
+  <!-- 비동기 데이터 통신 및 UI 조작 스크립트 연결 -->
+  <script src="script.js"></script>
+</body>
+</html>
